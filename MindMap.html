@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Idea Organizer with Mind Map</title>
+  <style>
+    body { font-family: sans-serif; margin: 2rem; }
+    ul { list-style-type: none; margin-left: 20px; }
+    li { margin: 5px 0; }
+    button, input { margin: 5px; }
+  </style>
+</head>
+<body>
+
+  <h2>🧠 Idea Organizer with Mind Map</h2>
+
+  <input type="text" id="ideaInput" placeholder="Enter idea" />
+  <button onclick="addIdea()">Add Idea</button>
+  <button onclick="exportToDOT()">Export to .dot</button>
+
+  <ul id="mindMap">
+    <li>
+      <span onclick="selectNode(this)">Main Idea</span>
+      <ul></ul>
+    </li>
+  </ul>
+
+  <script>
+    let selectedNode = null;
+
+    function selectNode(span) {
+      if (selectedNode) selectedNode.style.fontWeight = 'normal';
+      selectedNode = span;
+      span.style.fontWeight = 'bold';
+    }
+
+    function addIdea() {
+      const input = document.getElementById('ideaInput');
+      const text = input.value.trim();
+      if (!text || !selectedNode) return;
+
+      const li = document.createElement('li');
+      const span = document.createElement('span');
+      span.textContent = text;
+      span.onclick = () => selectNode(span);
+
+      li.appendChild(span);
+      li.appendChild(document.createElement('ul'));
+      selectedNode.nextElementSibling.appendChild(li);
+
+      input.value = '';
+    }
+
+    function exportToDOT() {
+      let dot = "digraph MindMap {\n";
+      function traverse(node) {
+        const parent = node.querySelector("span").textContent;
+        const children = node.querySelectorAll(":scope > ul > li");
+        children.forEach(child => {
+          const childLabel = child.querySelector("span").textContent;
+          dot += `"${parent}" -> "${childLabel}";\n`;
+          traverse(child);
+        });
+      }
+      traverse(document.querySelector("#mindMap > li"));
+
+      dot += "}";
+      download("mindmap.dot", dot);
+    }
+
+    function download(filename, text) {
+      const blob = new Blob([text], { type: 'text/plain' });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = filename;
+      link.click();
+    }
+  </script>
+
+</body>
+</html>
